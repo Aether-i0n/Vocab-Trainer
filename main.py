@@ -79,15 +79,31 @@ def clear_all_progress():
     else:
         print("❌ Cancelled.\n")
 
+def summarize_saved_progress(progress_files: List[Path]):
+    if not progress_files:
+        print("📂 No saved progress found.\n")
+        return
+
+    print(f"📦 {len(progress_files)} vocab set(s) in progress:")
+    for file in progress_files:
+        # Display relative path for readability
+        rel_path = file.relative_to("data").with_suffix("").as_posix().replace("_progress", "")
+        print(f"  • {rel_path}")
+    print()
+
 def main():
     print("📘 Welcome to Vocab Trainer")
-    print("1. Start quiz")
-    print("2. Clear all saved progress")
-    choice = input("Choose an option (1/2): ").strip()
+    progress_files = list(Path("data").rglob("*_progress.json"))
+    summarize_saved_progress(progress_files)
 
-    if choice == "2":
-        clear_all_progress()
-        return
+    if progress_files:
+        print("1. Start quiz")
+        print("2. Clear all saved progress")
+        choice = input("Choose an option (1/2): ").strip()
+
+        if choice == "2":
+            clear_all_progress()
+            return
 
     grouped = group_files_by_folder()
     if not grouped:

@@ -48,24 +48,23 @@ def load_progress(file_path: Path) -> List[Traduction]:
     progress_file = make_progress_path(file_path)
     if progress_file.exists():
         with progress_file.open("r", encoding="utf-8") as f:
-            # print(json.load(f))
             return [Traduction(data_traduction["prompts"], data_traduction["answers"], data_traduction["attempts"], data_traduction["correct"]) for data_traduction in json.load(f)]
     return []
 
 def review_mistakes(failed_data: List[Traduction]) -> None:
     print(f"\n{Fore.YELLOW}Reviewing your mistakes:{Style.RESET_ALL}")
     for traduction in failed_data:
-        print(f"❌ {Fore.CYAN}{traduction.prompt} ➜ {traduction.answer}{Style.RESET_ALL} | Attempts: {traduction.attempts}")
+        print(f"❌ {Fore.CYAN}{', '.join(traduction.prompts)} ➜ {', '.join(traduction.answers)}{Style.RESET_ALL} | Attempts: {traduction.attempts}")
     print()
 
     retry = input("Would you like to retry these manually? (y/n): ").strip().lower()
     if retry == "y":
         for traduction in failed_data:
-            user_input = input(f"{traduction.prompt} ➜ ").strip()
-            if user_input.lower() == traduction.answer.lower():
+            user_input = input(f"{', '.join(traduction.prompts)} ➜ ").strip()
+            if user_input.lower() in [answer.lower() for answer in traduction.answers]:
                 print(f"{Fore.GREEN}✅ Correct!{Style.RESET_ALL}\n")
             else:
-                print(f"{Fore.RED}❌ Still incorrect. The answer is: {traduction.answer}{Style.RESET_ALL}\n")
+                print(f"{Fore.RED}❌ Still incorrect. The answer(s) are: {', '.join(traduction.answers)}{Style.RESET_ALL}\n")
 
 def run_quiz(traductions: List[Traduction], file_path: Path) -> None:
 
