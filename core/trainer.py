@@ -1,33 +1,11 @@
 import random
 import json
 from pathlib import Path
-from colorama import init, Fore, Style
-from typing import List, Dict, Any
-from core.loader import Data
-
-class Translation:
-    def __init__(self, prompts: List[str], answers: List[str], attempts: int = 0, correct: bool = False):
-        self.prompts = prompts
-        self.answers = answers
-        self.attempts = attempts
-        self.correct = correct
-
-init(autoreset=True)
+from colorama import Fore, Style
+from typing import List
+from core.utils import Data, Translation, make_progress_path, markdown_to_text
 
 PROGRESS_DIR = Path("data")
-
-def make_progress_path(file_path: Path):
-    relative = file_path.relative_to("vocab")
-    progress_path = Path("data") / relative.with_suffix('').with_name(relative.stem + "_progress.json")
-    # progress_path.parent.mkdir(parents=True, exist_ok=True)
-    return progress_path
-
-def cleanup_empty_dirs(path, root=Path("data")):
-    """Recursively delete empty parent folders up to the root."""
-    path = path.parent
-    while path != root and path.exists() and not any(path.iterdir()):
-        path.rmdir()
-        path = path.parent
 
 def prepare_pairs(vocab_data: Data, mode: str) -> List[tuple]:
     vocab = vocab_data.vocab
@@ -51,29 +29,7 @@ def load_progress(file_path: Path) -> List[Translation]:
             return [Translation(data_translation["prompts"], data_translation["answers"], data_translation["attempts"], data_translation["correct"]) for data_translation in json.load(f)]
     return []
 
-def review_mistakes(failed_data: List[Translation]) -> None:
-    print(f"\n{Fore.YELLOW}Reviewing your mistakes:{Style.RESET_ALL}")
-    for translation in failed_data:
-        print(f"❌ {Fore.CYAN}{markdown_to_text(', '.join(translation.prompts))} ➜ {markdown_to_text(', '.join(translation.answers))}{Style.RESET_ALL} | Attempts: {translation.attempts}")
-    print()
-
-    retry = input("Would you like to retry these manually? (y/n): ").strip().lower()
-    if retry == "y":
-        for translation in failed_data:
-            user_input = input(f"{', '.join(translation.prompts)} ➜ ").strip()
-            if user_input.lower() in ["".join(answer.lower().split("*")) for answer in translation.answers]:
-                print(f"{Fore.GREEN}✅ Correct!{Style.RESET_ALL}\n")
-            else:
-                print(f"{Fore.RED}❌ Still incorrect. The answer(s) are: {', '.join(translation.answers)}{Style.RESET_ALL}\n")
-
-def markdown_to_text(markdown: str):
-    parts = markdown.split("*")
-    return "".join([[Style.NORMAL, Style.BRIGHT][i % 2] + part for i, part in enumerate(parts)]) + Style.NORMAL
-
-def run_quiz(translations: List[Translation], file_path: Path) -> None:
-
-    remaining = translations
-
+def run_quiz(remaining: List[Translation], file_path: Path) -> None:
     round_num = 1
     while remaining:
 
@@ -112,16 +68,4 @@ def run_quiz(translations: List[Translation], file_path: Path) -> None:
 
     print(f"{Fore.GREEN}🎉 All words answered correctly!{Style.RESET_ALL}\n")
 
-    failed_data: List[Translation] = []
-    for translation in remaining:
-        if translation.attempts > 2:
-            failed_data.append(translation)
-    if failed_data:
-        print("Some words had multiple wrong attempts before being solved.")
-        if input("Do you want to review your mistakes? (y/n): ").strip().lower() == "y":
-            review_mistakes(failed_data)
     
-    progress_file = make_progress_path(file_path)
-    progress_file.unlink(missing_ok=True)
-    cleanup_empty_dirs(progress_file)
-    print(f"{Fore.GREEN}Progress cleared!{Style.RESET_ALL}")

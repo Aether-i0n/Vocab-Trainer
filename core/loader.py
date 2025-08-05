@@ -1,15 +1,6 @@
 import json
 from pathlib import Path
-from typing import List, Dict, Any
-
-class Data:
-    def __init__(self, data_json: Dict[str, List[Any]]):
-        languages: List[str] = data_json["languages"]
-        vocab: List[List[str]] = data_json["vocab"]
-
-        self.lang1 = languages[0]
-        self.lang2 = languages[1]
-        self.vocab = vocab
+from core.utils import Data
 
 def load_vocab(file_path: str) -> Data:
     ext = Path(file_path).suffix

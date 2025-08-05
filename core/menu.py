@@ -1,10 +1,11 @@
 from core.loader import load_vocab
-from core.trainer import load_progress, prepare_pairs, Translation, make_progress_path
+from core.trainer import load_progress, prepare_pairs
 from pathlib import Path
 import json
 from collections import defaultdict
 from typing import List, Dict, Any
 import shutil
+from core.utils import Translation, make_progress_path
 
 VOCAB_DIR = Path("vocab")
 PROGRESS_DIR = Path("data")
