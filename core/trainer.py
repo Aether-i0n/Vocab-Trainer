@@ -54,7 +54,7 @@ def load_progress(file_path: Path) -> List[Traduction]:
 def review_mistakes(failed_data: List[Traduction]) -> None:
     print(f"\n{Fore.YELLOW}Reviewing your mistakes:{Style.RESET_ALL}")
     for traduction in failed_data:
-        print(f"❌ {Fore.CYAN}{', '.join(traduction.prompts)} ➜ {', '.join(traduction.answers)}{Style.RESET_ALL} | Attempts: {traduction.attempts}")
+        print(f"❌ {Fore.CYAN}{markdown_to_text(', '.join(traduction.prompts))} ➜ {markdown_to_text(', '.join(traduction.answers))}{Style.RESET_ALL} | Attempts: {traduction.attempts}")
     print()
 
     retry = input("Would you like to retry these manually? (y/n): ").strip().lower()
@@ -65,6 +65,10 @@ def review_mistakes(failed_data: List[Traduction]) -> None:
                 print(f"{Fore.GREEN}✅ Correct!{Style.RESET_ALL}\n")
             else:
                 print(f"{Fore.RED}❌ Still incorrect. The answer(s) are: {', '.join(traduction.answers)}{Style.RESET_ALL}\n")
+
+def markdown_to_text(markdown: str):
+    parts = markdown.split("*")
+    return "".join([[Style.NORMAL, Style.BRIGHT][i % 2] + part for i, part in enumerate(parts)]) + Style.NORMAL
 
 def run_quiz(traductions: List[Traduction], file_path: Path) -> None:
 
@@ -88,14 +92,14 @@ def run_quiz(traductions: List[Traduction], file_path: Path) -> None:
                 prompts = traduction.prompts
                 prompt = random.choice(prompts)
                 answers = traduction.answers
-                print(f"{Fore.CYAN}{prompt}{Style.RESET_ALL} ➜ ", end="")
+                print(f"{Fore.CYAN}{markdown_to_text(prompt)}{Style.RESET_ALL} ➜ ", end="")
                 user_input = input().strip()
 
                 if user_input.lower() in [answer.lower() for answer in answers]:
                     print(f"{Fore.GREEN}✅ Correct!{Style.RESET_ALL}\n")
                     traduction.correct = True
                 else:
-                    print(f"{Fore.RED}❌ Incorrect. Correct answer(s): {', '.join(answers)}{Style.RESET_ALL}\n")
+                    print(f"{Fore.RED}❌ Incorrect. Correct answer(s): {markdown_to_text(', '.join(answers))}{Style.RESET_ALL}\n")
                     traduction.prompts = [prompt]
                 
                 traduction.attempts += 1
