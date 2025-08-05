@@ -1,5 +1,6 @@
+from core.menu import select_file, select_translations, run_menu
 from core.trainer import run_quiz
-from core.menu import run_menu, select_file, select_translations
+
 
 def main():
     run_menu()

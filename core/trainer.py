@@ -1,23 +1,19 @@
-import random
-import json
-from pathlib import Path
 from colorama import Fore, Style
+from pathlib import Path
+from random import choice, shuffle
 from typing import List
-from core.utils import Translation, make_progress_path, markdown_to_text
+
+from core.saver import save_progress
+from core.utils import markdown_to_text, Translation
+
 
 PROGRESS_DIR = Path("data")
-
-def save_progress(failed_data: List[Translation], file_path: Path) -> None:
-    progress_file = make_progress_path(file_path)
-    progress_file.parent.mkdir(parents=True, exist_ok=True)
-    with progress_file.open("w", encoding="utf-8") as f:
-        json.dump([{"prompts": translation.prompts, "answers": translation.answers, "attempts": translation.attempts, "correct": translation.correct} for translation in failed_data], f, ensure_ascii=False, indent=2)
 
 def run_quiz(remaining: List[Translation], file_path: Path) -> None:
     round_num = 1
     while remaining:
 
-        random.shuffle(remaining)
+        shuffle(remaining)
         
         number_words_remaining = sum([1 for translation in remaining if not translation.correct])
 
@@ -30,7 +26,7 @@ def run_quiz(remaining: List[Translation], file_path: Path) -> None:
         for translation in remaining:            
             if not translation.correct:
                 prompts = translation.prompts
-                prompt = random.choice(prompts)
+                prompt = choice(prompts)
                 answers = translation.answers
                 print(f"{Fore.CYAN}{markdown_to_text(prompt)}{Style.RESET_ALL} ➜ ", end="")
                 user_input = input().strip()
@@ -51,5 +47,3 @@ def run_quiz(remaining: List[Translation], file_path: Path) -> None:
         round_num += 1
 
     print(f"{Fore.GREEN}🎉 All words answered correctly!{Style.RESET_ALL}\n")
-
-    

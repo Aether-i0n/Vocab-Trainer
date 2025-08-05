@@ -1,7 +1,9 @@
+from colorama import Fore, Style
 from pathlib import Path
 from typing import List
-from colorama import Fore, Style
-from core.utils import Translation, markdown_to_text, make_progress_path
+
+from core.utils import make_progress_path, markdown_to_text, Translation
+
 
 def cleanup_empty_dirs(path: Path, root=Path("data")):
     """Recursively delete empty parent folders up to the root."""

@@ -1,28 +1,29 @@
-from core.loader import load_vocab, load_progress
-from pathlib import Path
-import json
 from collections import defaultdict
+from json import load
+from pathlib import Path
+from random import randint
+from shutil import rmtree
 from typing import List, Dict, Any
-import shutil
+
+from core.loader import load_vocab, load_progress
 from core.utils import Translation, make_progress_path, Data
-import random
+
 
 VOCAB_DIR = Path("vocab")
-PROGRESS_DIR = Path("data")
 
 def prepare_pairs(vocab_data: Data, mode: str) -> List[tuple[str, str]]:
     vocab = vocab_data.vocab
     if mode == "reverse":
         return [(b, a) for a, b in vocab]
     elif mode == "random":
-        return [(a, b) if random.random() < 0.5 else (b, a) for a, b in vocab]
+        return [(a, b) if randint(0, 1) else (b, a) for a, b in vocab]
     else:
         return [(a, b) for a, b in vocab]
 
 def count_words_in_file(file_path: Path):
     try:
         with open(file_path, "r", encoding="utf-8") as f:
-            data: Dict[str, List[Any]] = json.load(f)
+            data: Dict[str, List[Any]] = load(f)
         return len(data.get("vocab", []))
     except:
         return 0
@@ -33,7 +34,7 @@ def get_progress_info(file_path: Path):
         return None
     try:
         with open(progress_file, "r", encoding="utf-8") as f:
-            data: List[Dict[str, List[Any]]] = json.load(f)
+            data: List[Dict[str, List[Any]]] = load(f)
         return sum([1 for translation in data if not translation["correct"]])
     except:
         return None
@@ -81,7 +82,7 @@ def clear_all_progress():
     confirm = input("⚠️ Are you sure you want to delete ALL saved progress? (yes/no): ").strip().lower()
     if confirm == 'yes':
         if Path("data").exists():
-            shutil.rmtree("data")
+            rmtree("data")
             print("✅ All progress cleared.\n")
         else:
             print("ℹ️ No saved progress to delete.\n")
