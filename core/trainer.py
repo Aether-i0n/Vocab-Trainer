@@ -3,31 +3,15 @@ import json
 from pathlib import Path
 from colorama import Fore, Style
 from typing import List
-from core.utils import Data, Translation, make_progress_path, markdown_to_text
+from core.utils import Translation, make_progress_path, markdown_to_text
 
 PROGRESS_DIR = Path("data")
-
-def prepare_pairs(vocab_data: Data, mode: str) -> List[tuple]:
-    vocab = vocab_data.vocab
-    if mode == "reverse":
-        return [(b, a) for a, b in vocab]
-    elif mode == "random":
-        return [(a, b) if random.random() < 0.5 else (b, a) for a, b in vocab]
-    else:
-        return [(a, b) for a, b in vocab]
 
 def save_progress(failed_data: List[Translation], file_path: Path) -> None:
     progress_file = make_progress_path(file_path)
     progress_file.parent.mkdir(parents=True, exist_ok=True)
     with progress_file.open("w", encoding="utf-8") as f:
         json.dump([{"prompts": translation.prompts, "answers": translation.answers, "attempts": translation.attempts, "correct": translation.correct} for translation in failed_data], f, ensure_ascii=False, indent=2)
-
-def load_progress(file_path: Path) -> List[Translation]:
-    progress_file = make_progress_path(file_path)
-    if progress_file.exists():
-        with progress_file.open("r", encoding="utf-8") as f:
-            return [Translation(data_translation["prompts"], data_translation["answers"], data_translation["attempts"], data_translation["correct"]) for data_translation in json.load(f)]
-    return []
 
 def run_quiz(remaining: List[Translation], file_path: Path) -> None:
     round_num = 1

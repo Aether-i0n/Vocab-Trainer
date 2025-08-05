@@ -1,14 +1,23 @@
-from core.loader import load_vocab
-from core.trainer import load_progress, prepare_pairs
+from core.loader import load_vocab, load_progress
 from pathlib import Path
 import json
 from collections import defaultdict
 from typing import List, Dict, Any
 import shutil
-from core.utils import Translation, make_progress_path
+from core.utils import Translation, make_progress_path, Data
+import random
 
 VOCAB_DIR = Path("vocab")
 PROGRESS_DIR = Path("data")
+
+def prepare_pairs(vocab_data: Data, mode: str) -> List[tuple[str, str]]:
+    vocab = vocab_data.vocab
+    if mode == "reverse":
+        return [(b, a) for a, b in vocab]
+    elif mode == "random":
+        return [(a, b) if random.random() < 0.5 else (b, a) for a, b in vocab]
+    else:
+        return [(a, b) for a, b in vocab]
 
 def count_words_in_file(file_path: Path):
     try:
