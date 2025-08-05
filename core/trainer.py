@@ -61,7 +61,7 @@ def review_mistakes(failed_data: List[Traduction]) -> None:
     if retry == "y":
         for traduction in failed_data:
             user_input = input(f"{', '.join(traduction.prompts)} ➜ ").strip()
-            if user_input.lower() in [answer.lower() for answer in traduction.answers]:
+            if user_input.lower() in ["".join(answer.lower().split("*")) for answer in traduction.answers]:
                 print(f"{Fore.GREEN}✅ Correct!{Style.RESET_ALL}\n")
             else:
                 print(f"{Fore.RED}❌ Still incorrect. The answer(s) are: {', '.join(traduction.answers)}{Style.RESET_ALL}\n")
@@ -95,7 +95,7 @@ def run_quiz(traductions: List[Traduction], file_path: Path) -> None:
                 print(f"{Fore.CYAN}{markdown_to_text(prompt)}{Style.RESET_ALL} ➜ ", end="")
                 user_input = input().strip()
 
-                if user_input.lower() in [answer.lower() for answer in answers]:
+                if user_input.lower() in ["".join(answer.lower().split("*")) for answer in answers]:
                     print(f"{Fore.GREEN}✅ Correct!{Style.RESET_ALL}\n")
                     traduction.correct = True
                 else:
