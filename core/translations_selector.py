@@ -3,17 +3,10 @@ from random import randint
 from typing import List
 
 from core.loader import load_vocab, load_progress
-from core.utils import Translation, make_progress_path, Data
+from core.utils import Translation, Data
 
 
-def select_translations(selected_file: Path) -> List[Translation]:
-    # Load previous progress
-    use_saved = False
-    progress_file = make_progress_path(selected_file)
-    if progress_file.exists():
-        choice = input("Resume previous session? (y/n): ").strip().lower()
-        use_saved = choice == "y"
-
+def select_translations(use_saved: bool, selected_file: Path) -> List[Translation]:
     if use_saved:
         return load_progress(selected_file)
     else:
