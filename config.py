@@ -1,0 +1,1 @@
+# Make the code as readable as possible by changing function's name if needed, refactor code and add other function to slice the code in more readable code. Also add complete description to each function. Avoid using comments and create function instead.
