@@ -5,16 +5,6 @@ from typing import Any, Dict, List
 
 init(autoreset=True)
 
-def markdown_to_text(markdown: str):
-    parts = markdown.split("*")
-    return "".join([[Style.NORMAL, Style.BRIGHT][i % 2] + part for i, part in enumerate(parts)]) + Style.NORMAL
-
-def make_progress_path(file_path: Path):
-    relative = file_path.relative_to("vocab")
-    progress_path = Path("data") / relative.with_suffix('').with_name(relative.stem + "_progress.json")
-    # progress_path.parent.mkdir(parents=True, exist_ok=True)
-    return progress_path
-
 class Data:
     def __init__(self, data_json: Dict[str, List[Any]]):
         languages: List[str] = data_json["languages"]
@@ -30,3 +20,13 @@ class Translation:
         self.answers = answers
         self.attempts = attempts
         self.correct = correct
+
+def make_progress_path(file_path: Path):
+    relative = file_path.relative_to("vocab")
+    progress_path = Path("data") / relative.with_suffix('').with_name(relative.stem + "_progress.json")
+    # progress_path.parent.mkdir(parents=True, exist_ok=True)
+    return progress_path
+
+def markdown_to_text(markdown: str):
+    parts = markdown.split("*")
+    return "".join([[Style.NORMAL, Style.BRIGHT][i % 2] + part for i, part in enumerate(parts)]) + Style.NORMAL

@@ -5,12 +5,20 @@ from typing import List
 from core.utils import make_progress_path, markdown_to_text, Translation
 
 
-def cleanup_empty_dirs(path: Path, root=Path("data")):
-    """Recursively delete empty parent folders up to the root."""
-    path = path.parent
-    while path != root and path.exists() and not any(path.iterdir()):
-        path.rmdir()
-        path = path.parent
+def run_results(remaining: List[Translation], file_path: Path):
+    failed_data: List[Translation] = []
+    for translation in remaining:
+        if translation.attempts > 2:
+            failed_data.append(translation)
+    if failed_data:
+        print("Some words had multiple wrong attempts before being solved.")
+        if input("Do you want to review your mistakes? (y/n): ").strip().lower() == "y":
+            review_mistakes(failed_data)
+    
+    progress_file = make_progress_path(file_path)
+    progress_file.unlink(missing_ok=True)
+    cleanup_empty_dirs(progress_file)
+    print(f"{Fore.GREEN}Progress cleared!{Style.RESET_ALL}")
 
 def review_mistakes(failed_data: List[Translation]) -> None:
     print(f"\n{Fore.YELLOW}Reviewing your mistakes:{Style.RESET_ALL}")
@@ -27,17 +35,9 @@ def review_mistakes(failed_data: List[Translation]) -> None:
             else:
                 print(f"{Fore.RED}❌ Still incorrect. The answer(s) are: {', '.join(translation.answers)}{Style.RESET_ALL}\n")
 
-def run_results(remaining: List[Translation], file_path: Path):
-    failed_data: List[Translation] = []
-    for translation in remaining:
-        if translation.attempts > 2:
-            failed_data.append(translation)
-    if failed_data:
-        print("Some words had multiple wrong attempts before being solved.")
-        if input("Do you want to review your mistakes? (y/n): ").strip().lower() == "y":
-            review_mistakes(failed_data)
-    
-    progress_file = make_progress_path(file_path)
-    progress_file.unlink(missing_ok=True)
-    cleanup_empty_dirs(progress_file)
-    print(f"{Fore.GREEN}Progress cleared!{Style.RESET_ALL}")
+def cleanup_empty_dirs(path: Path, root=Path("data")):
+    """Recursively delete empty parent folders up to the root."""
+    path = path.parent
+    while path != root and path.exists() and not any(path.iterdir()):
+        path.rmdir()
+        path = path.parent
