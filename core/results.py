@@ -50,7 +50,7 @@ def retry_failed_translations(failed_translations: List[TranslationPair]) -> Non
     """ Allows the user to manually retry each failed translation and provides feedback. """
     
     for translation in failed_translations:
-        user_input = input(f"{', '.join(translation.prompts)} ➜ ").strip()
+        user_input = input(f"{', '.join(translation.prompt)} ➜ ").strip()
         if is_correct_answer(user_input, translation.answers):
             print(f"{Fore.GREEN}✅ Correct!{Style.RESET_ALL}\n")
         else:
