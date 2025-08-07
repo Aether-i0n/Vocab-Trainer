@@ -4,7 +4,7 @@ from json import load
 from pathlib import Path
 from typing import Any, Dict, List
 
-from core.utils import VocabData, build_progress_path, TranslationPair, PromptGroup, Word, AnswerGroups, AnswerGroup
+from core.utils import AnswerGroup, AnswerGroups, build_progress_path, PromptGroup, TranslationPair, VocabData, Word
 
 
 def get_progress_file(file_path: Path) -> Path:

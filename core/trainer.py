@@ -6,7 +6,7 @@ from random import choice, shuffle
 from typing import List
 
 from core.saver import save_failed_translations
-from core.utils import convert_markdown_to_text, TranslationPair, AnswerGroups, PromptGroup, WordGroup
+from core.utils import convert_markdown_to_text, PromptGroup, TranslationPair, WordGroup
 
 
 PROGRESS_DIR = Path("data")

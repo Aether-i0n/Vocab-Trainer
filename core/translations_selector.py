@@ -5,7 +5,8 @@ from random import randint
 from typing import List
 
 from core.loader import load_vocab_data, load_translations_progress
-from core.utils import TranslationPair, VocabData, VocabEntry, PromptGroup, AnswerGroup, AnswerGroups
+from core.utils import AnswerGroup, AnswerGroups, PromptGroup, TranslationPair, VocabData, VocabEntry
+
 
 def select_translations(use_saved: bool, selected_file: Path) -> List[TranslationPair]:
     """ Returns a list of Translation objects based on user selection.
