@@ -6,95 +6,111 @@ from random import choice, shuffle
 from typing import List
 
 from core.saver import save_failed_translations
-from core.utils import convert_markdown_to_text, Translation
+from core.utils import convert_markdown_to_text, TranslationPair, AnswerGroups, PromptGroup, WordGroup
 
 
 PROGRESS_DIR = Path("data")
 
-def run_vocabulary_quiz(translations: List[Translation], file_path: Path) -> None:
-    """ Runs the vocabulary quiz until all translations are answered correctly.
+def run_vocabulary_quiz(pairs: List[TranslationPair], file_path: Path) -> None:
+    """ Runs the vocabulary quiz until all entries are answered correctly.
     Displays progress after each round and saves progress to file. """
 
     round_number = 1
 
-    while has_incorrect_answers(translations):
-        words_left = count_incorrect(translations)
-        display_round_header(round_number, words_left)
-        translations = conduct_quiz_round(translations)
-        save_failed_translations(translations, file_path)
+    while has_incorrect_answers(pairs):
+        entries_left = count_incorrect(pairs)
+        display_round_header(round_number, entries_left)
+        pairs = conduct_quiz_round(pairs)
+        save_failed_translations(pairs, file_path)
         round_number += 1
-    
+
     display_completion_message()
 
-def has_incorrect_answers(translations: List[Translation]) -> bool:
-    """ Returns True if there are translations not answered correctly. """
-    
-    return any(not t.correct for t in translations)
+def has_incorrect_answers(pairs: List[TranslationPair]) -> bool:
+    """ Returns True if there are entries not answered correctly. """
 
-def count_incorrect(translations: List[Translation]) -> int:
-    """ Counts the number of translations not answered correctly. """
-    
-    return sum(1 for t in translations if not t.correct)
+    return any(not pair.correct for pair in pairs)
 
-def display_round_header(round_number: int, words_left: int) -> None:
+def count_incorrect(pairs: List[TranslationPair]) -> int:
+    """ Counts the number of entries not answered correctly. """
+
+    return sum(1 for pair in pairs if not pair.correct)
+
+def display_round_header(round_number: int, entries_left: int) -> None:
     """ Displays the header for the current quiz round. """
-    
-    print(f"\n--- {Fore.YELLOW}Round {round_number}{Style.RESET_ALL}: {words_left} word(s) to review ---\n")
 
-def conduct_quiz_round(translations: List[Translation]) -> List[Translation]:
-    """ Conducts a single round of the quiz, asking questions for each translation.
-    Returns the updated list of translations. """
-    
-    shuffle(translations)
-    for translation in translations:
-        ask_translation_question(translation)
-    return translations
+    print(f"\n--- {Fore.YELLOW}Round {round_number}{Style.RESET_ALL}: {entries_left} entry(ies) to review ---\n")
 
-def ask_translation_question(translation: Translation) -> None:
-    """ Asks the user a question for the given translation.
-    Updates the translation's correctness and attempts. """
-    
-    if translation.correct:
+def conduct_quiz_round(pairs: List[TranslationPair]) -> List[TranslationPair]:
+    """ Conducts a single round of the quiz, asking questions for each entry.
+    Returns the updated list of pairs. """
+
+    shuffle(pairs)
+    for pair in pairs:
+        ask_translation_question(pair)
+    return pairs
+
+def ask_translation_question(pair: TranslationPair) -> None:
+    """ Asks the user a question for the given entry.
+    Updates the entry's correctness and attempts. """
+
+    if pair.correct:
         return
-    
-    prompt = select_prompt(translation)
-    print(f"{Fore.CYAN}{convert_markdown_to_text(prompt)}{Style.RESET_ALL} ➜ ", end="")
-    user_input = input().strip()
 
-    if is_correct_answer(user_input, translation.answers):
+    prompt_text = select_prompt(pair.prompt)
+    print(f"{pair.prompt.categorie} ➜ {Fore.CYAN}{convert_markdown_to_text(prompt_text)}{Style.RESET_ALL}")
+    print("----------")
+
+    user_inputs: List[tuple[str, WordGroup]] = []
+
+    for answer_group in pair.answers.groups:
+        print(f"{answer_group.categorie} ➜ ", end="")
+        user_input = input().strip()
+        user_inputs.append((user_input, answer_group))
+
+    incorrect_groups: List[WordGroup] = []
+    correct = True
+    for user_input, answer_group in user_inputs:
+        if not is_correct_answer(user_input, answer_group):
+            correct = False
+            incorrect_groups.append(answer_group)
+
+    if correct:
         display_correct_message()
-        translation.correct = True
+        pair.correct = True
     else:
-        display_incorrect_message(translation.answers)
-        translation.prompts = [prompt]
-    
-    translation.attempts += 1
+        display_incorrect_message()
+        for group in incorrect_groups:
+            correct_answers = ', '.join([word.text for word in group.words])
+            print(f"{Fore.RED}Correct answer(s): {group.categorie} ➜ {convert_markdown_to_text(correct_answers)}{Style.RESET_ALL}")
 
-def select_prompt(translation: Translation) -> str:
-    """ Selects a prompt from the translation's prompts. """
-    
-    return choice(translation.prompts)
+    pair.attempts += 1
+    print()
 
-def is_correct_answer(user_input: str, answers: List[str]) -> bool:
+def select_prompt(prompt_group: PromptGroup) -> str:
+    """ Selects a prompt from the entry's prompt group. """
+
+    return choice(prompt_group.words).text
+
+def is_correct_answer(user_input: str, answer_group: WordGroup) -> bool:
     """ Checks if the user's input matches any of the correct answers.
     Ignores case and asterisks. """
-    
-    normalized_input = user_input.lower()
-    normalized_answers = ["".join(ans.lower().split("*")) for ans in answers]
+
+    normalized_input = user_input.lower().replace("*", "")
+    normalized_answers = ["".join(word.text.lower().split("*")) for word in answer_group.words]
     return normalized_input in normalized_answers
 
 def display_correct_message() -> None:
     """ Displays a message for a correct answer. """
-    
-    print(f"{Fore.GREEN}✅ Correct!{Style.RESET_ALL}\n")
 
-def display_incorrect_message(answers: List[str]) -> None:
+    print(f"{Fore.GREEN}✅ Correct!{Style.RESET_ALL}")
+
+def display_incorrect_message() -> None:
     """ Displays a message for an incorrect answer, showing the correct answers. """
-    
-    correct_text = convert_markdown_to_text(', '.join(answers))
-    print(f"{Fore.RED}❌ Incorrect. Correct answer(s): {correct_text}{Style.RESET_ALL}\n")
+
+    print(f"{Fore.RED}❌ Incorrect !!{Style.RESET_ALL}")
 
 def display_completion_message() -> None:
-    """ Displays a message when all words are answered correctly. """
-    
-    print(f"{Fore.GREEN}🎉 All words answered correctly!{Style.RESET_ALL}\n")
+    """ Displays a message when all entries are answered correctly. """
+
+    print(f"{Fore.GREEN}🎉 All entries answered correctly!{Style.RESET_ALL}\n")

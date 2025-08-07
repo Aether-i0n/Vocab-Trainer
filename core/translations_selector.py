@@ -5,10 +5,9 @@ from random import randint
 from typing import List
 
 from core.loader import load_vocab_data, load_translations_progress
-from core.utils import Translation, Data
+from core.utils import TranslationPair, VocabData, VocabEntry, PromptGroup, AnswerGroup, AnswerGroups
 
-
-def select_translations(use_saved: bool, selected_file: Path) -> List[Translation]:
+def select_translations(use_saved: bool, selected_file: Path) -> List[TranslationPair]:
     """ Returns a list of Translation objects based on user selection.
     If use_saved is True, loads saved progress. Otherwise, prompts for mode and generates translation pairs. """
     
@@ -19,53 +18,42 @@ def select_translations(use_saved: bool, selected_file: Path) -> List[Translatio
     mode = get_translation_mode(vocab_data)
     pairs = generate_translation_pairs(vocab_data, mode)
 
-    return create_translation_objects(pairs)
+    return [TranslationPair(prompt, answers) for prompt, answers in pairs]
 
-def get_translation_mode(vocab_data: Data) -> str:
+def get_translation_mode(vocab_data: VocabData) -> str:
     """ Prompts the user to select a translation mode: lang1, lang2, or random.
     Returns the selected mode as a string. """
-
-    mode_input = input(f"Mode? ({vocab_data.lang1} / {vocab_data.lang2} / random): ").strip().lower()
-    valid_modes = [vocab_data.lang1, vocab_data.lang2, 'random']
-
-    if mode_input not in valid_modes:
-        print(f"Invalid mode. Defaulting to {vocab_data.lang1}.")
-        return vocab_data.lang1
     
-    return mode_input
+    options = vocab_data.languages + ["random"]
+    mode = input(f"Mode? ({' / '.join(options)}): ").strip().lower()
+    if mode not in options:
+        print(f"Invalid mode. Defaulting to {vocab_data.languages[0]}.")
+        return vocab_data.languages[0]
+    return mode
 
-def generate_translation_pairs(vocab_data: Data, mode: str) -> List[tuple[str, str]]:
-    """ Generates translation pairs based on the selected mode.
-    Modes:
-        - vocab_data.lang1: forward (a, b)
-        - vocab_data.lang2: reverse (b, a)
-        - random: randomly selects (a, b) or (b, a) for each pair
-    Returns a list of tuple pairs. """
+def generate_translation_pairs(vocab_data: VocabData, mode: str):
+    """ Builds translation pairs based on the selected mode.
+    If mode is 'random', generates pairs with randomly selected prompt languages.
+    Otherwise, generates pairs with the specified prompt language. """
 
-    if mode == vocab_data.lang2:
-        return reverse_pairs(vocab_data.vocab)
+    if mode == "random":
+        return [random_pair(entry, vocab_data.languages) for entry in vocab_data.entries]
     
-    elif mode == 'random':
-        return randomize_pairs(vocab_data.vocab)
-    
-    return forward_pairs(vocab_data.vocab)
+    idx = vocab_data.languages.index(mode)
+    return [forward_pair(entry, idx, vocab_data.languages) for entry in vocab_data.entries]
 
-def forward_pairs(vocab: List[tuple[str, str]]) -> List[tuple[str, str]]:
-    """ Returns translation pairs in forward order (a, b). """
+def forward_pair(entry: VocabEntry, idx: int, languages: List[str]):
+    """ Constructs a translation pair for a specific language index. """
 
-    return [(a, b) for a, b in vocab]
+    prompt_group = PromptGroup(entry.groups[idx].words, languages[idx])
+    answer_groups = AnswerGroups([
+        AnswerGroup(entry.groups[i].words, languages[i])
+        for i in range(len(entry.groups)) if i != idx
+    ])
+    return (prompt_group, answer_groups)
 
-def reverse_pairs(vocab: List[tuple[str, str]]) -> List[tuple[str, str]]:
-    """ Returns translation pairs in reverse order (b, a). """
+def random_pair(entry: VocabEntry, languages: List[str]):
+    """ Constructs a translation pair with a randomly selected prompt language. """
 
-    return [(b, a) for a, b in vocab]
-
-def randomize_pairs(vocab: List[tuple[str, str]]) -> List[tuple[str, str]]:
-    """ Randomly selects forward or reverse order for each translation pair. """
-
-    return [(a, b) if randint(0, 1) else (b, a) for a, b in vocab]
-
-def create_translation_objects(pairs: List[tuple[str, str]]) -> List[Translation]:
-    """ Converts a list of tuple pairs into a list of Translation objects. """
-
-    return [Translation(prompt, answer) for prompt, answer in pairs]
+    idx = randint(0, len(entry.groups) - 1)
+    return forward_pair(entry, idx, languages)

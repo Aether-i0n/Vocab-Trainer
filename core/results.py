@@ -4,10 +4,10 @@ from colorama import Fore, Style
 from pathlib import Path
 from typing import List
 
-from core.utils import build_progress_path, convert_markdown_to_text, Translation
+from core.utils import build_progress_path, convert_markdown_to_text, TranslationPair
 
 
-def run_results(remaining_translations: List[Translation], file_path: Path):
+def run_results(remaining_translations: List[TranslationPair], file_path: Path):
     """ Handles the end-of-session results, including identifying failed translations,
     offering review and retry options, and clearing progress files. """
     
@@ -18,7 +18,7 @@ def run_results(remaining_translations: List[Translation], file_path: Path):
             review_failed_translations(failed_translations)
     clear_progress(file_path)
 
-def get_failed_translations(translations: List[Translation]) -> List[Translation]:
+def get_failed_translations(translations: List[TranslationPair]) -> List[TranslationPair]:
     """ Returns a list of translations that had more than two failed attempts. """
     
     return [t for t in translations if t.attempts > 2]
@@ -28,7 +28,7 @@ def prompt_yes_no(message: str) -> bool:
     
     return input(f"{message} (y/n): ").strip().lower() == "y"
 
-def review_failed_translations(failed_translations: List[Translation]) -> None:
+def review_failed_translations(failed_translations: List[TranslationPair]) -> None:
     """ Displays failed translations and offers the user a chance to retry them manually. """
     
     print(f"\n{Fore.YELLOW}Reviewing your mistakes:{Style.RESET_ALL}")
@@ -39,14 +39,14 @@ def review_failed_translations(failed_translations: List[Translation]) -> None:
     if prompt_yes_no("Would you like to retry these manually?"):
         retry_failed_translations(failed_translations)
 
-def show_failed_translation(translation: Translation) -> None:
+def show_failed_translation(translation: TranslationPair) -> None:
     """ Prints a single failed translation with its prompts, answers, and attempt count. """
     
     prompts = convert_markdown_to_text(', '.join(translation.prompts))
     answers = convert_markdown_to_text(', '.join(translation.answers))
     print(f"❌ {Fore.CYAN}{prompts} ➜ {answers}{Style.RESET_ALL} | Attempts: {translation.attempts}")
 
-def retry_failed_translations(failed_translations: List[Translation]) -> None:
+def retry_failed_translations(failed_translations: List[TranslationPair]) -> None:
     """ Allows the user to manually retry each failed translation and provides feedback. """
     
     for translation in failed_translations:

@@ -7,19 +7,51 @@ from typing import Any, Dict, List
 
 init(autoreset=True)
 
-class Data:
-    """ Stores language and vocabulary data loaded from a JSON dictionary. """
-
+class VocabData:
     def __init__(self, data_json: Dict[str, List[Any]]):
-        self.lang1 = data_json["languages"][0]
-        self.lang2 = data_json["languages"][1]
-        self.vocab = data_json["vocab"]
+        self.languages: List[str] = data_json["categories"]
+        self.entries: List[VocabEntry] = [
+            VocabEntry([
+                WordGroup([
+                    Word(word)
+                    for word in group
+                ], self.languages[i])
+                for i, group in enumerate(entry)
+            ])
+            for entry in data_json["vocab"]
+        ]
 
-class Translation:
-    """ Represents a translation attempt, including prompts, answers, number of attempts, and correctness. """
-    
-    def __init__(self, prompts: List[str], answers: List[str], attempts: int = 0, correct: bool = False):
-        self.prompts = prompts
+class Word:
+    def __init__(self, text: str):
+        self.text = text
+
+class WordGroup:
+    def __init__(self, words: List[Word], categorie: str):
+        self.words = words
+        self.categorie = categorie
+
+class VocabEntry:
+    def __init__(self, groups: List[WordGroup]):
+        self.groups = groups
+
+class Prompt(Word):
+    pass
+
+class PromptGroup(WordGroup):
+    pass
+
+class Answer(Word):
+    pass
+
+class AnswerGroup(WordGroup):
+    pass
+
+class AnswerGroups(VocabEntry):
+    pass
+
+class TranslationPair:
+    def __init__(self, prompt: PromptGroup, answers: AnswerGroups, attempts: int = 0, correct: bool = False):
+        self.prompt = prompt
         self.answers = answers
         self.attempts = attempts
         self.correct = correct
