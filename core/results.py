@@ -42,7 +42,7 @@ def review_failed_translations(failed_translations: List[TranslationPair]) -> No
 def show_failed_translation(translation: TranslationPair) -> None:
     """ Prints a single failed translation with its prompts, answers, and attempt count. """
     
-    prompts = convert_markdown_to_text(', '.join(translation.prompts))
+    prompts = convert_markdown_to_text(', '.join(translation.prompt))
     answers = convert_markdown_to_text(', '.join(translation.answers))
     print(f"❌ {Fore.CYAN}{prompts} ➜ {answers}{Style.RESET_ALL} | Attempts: {translation.attempts}")
 
