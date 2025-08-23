@@ -42,19 +42,19 @@ def review_failed_translations(failed_translations: List[TranslationPair]) -> No
 def show_failed_translation(translation: TranslationPair) -> None:
     """ Prints a single failed translation with its prompts, answers, and attempt count. """
     
-    prompts = convert_markdown_to_text(', '.join(translation.prompt))
-    answers = convert_markdown_to_text(', '.join(translation.answers))
+    prompts = convert_markdown_to_text(', '.join([word.text for word in translation.prompt.words]))
+    answers = convert_markdown_to_text(', '.join([word.text for word_group in translation.answers.groups for word in word_group.words]))
     print(f"❌ {Fore.CYAN}{prompts} ➜ {answers}{Style.RESET_ALL} | Attempts: {translation.attempts}")
 
 def retry_failed_translations(failed_translations: List[TranslationPair]) -> None:
     """ Allows the user to manually retry each failed translation and provides feedback. """
     
     for translation in failed_translations:
-        user_input = input(f"{', '.join(translation.prompt)} ➜ ").strip()
-        if is_correct_answer(user_input, translation.answers):
+        user_input = input(f"{', '.join([word.text for word in translation.prompt.words])} ➜ ").strip()
+        if is_correct_answer(user_input, [word.text for word_group in translation.answers.groups for word in word_group.words]):
             print(f"{Fore.GREEN}✅ Correct!{Style.RESET_ALL}\n")
         else:
-            print(f"{Fore.RED}❌ Still incorrect. The answer(s) are: {', '.join(translation.answers)}{Style.RESET_ALL}\n")
+            print(f"{Fore.RED}❌ Still incorrect. The answer(s) are: {', '.join([word.text for word_group in translation.answers.groups for word in word_group.words])}{Style.RESET_ALL}\n")
 
 def is_correct_answer(user_input: str, answers: List[str]) -> bool:
     """ Checks if the user's input matches any of the correct answers (case-insensitive, ignoring asterisks). """
